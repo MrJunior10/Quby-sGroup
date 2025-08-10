@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, Form
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import os, string, random, json
 
@@ -8,6 +9,10 @@ from services.file_ingest import sniff_and_extract
 from services.llm import summarize as llm_summarize, qa as llm_qa, flashcards as llm_flashcards, translate as llm_translate
 
 app = FastAPI(title="Puch Doc Chat - HTTP API")
+
+# Serve static PDF files from /files/{doc_id}.pdf
+os.makedirs("shares", exist_ok=True)
+app.mount("/files", StaticFiles(directory="shares"), name="files")
 
 # ------------------ Request Models ------------------
 class IngestText(BaseModel):
@@ -62,6 +67,12 @@ async def ingest_file(file: UploadFile = File(...), title: str | None = Form(Non
     inferred_title, text = sniff_and_extract(file.filename, data)
     use_title = title or inferred_title
     doc_id = create_doc(use_title, text)
+
+    # ✅ Save raw PDF in shares/ so it can be accessed at /files/{doc_id}.pdf
+    os.makedirs("shares", exist_ok=True)
+    with open(f"shares/{doc_id}.pdf", "wb") as f:
+        f.write(data)
+
     return {"doc_id": doc_id, "title": use_title, "chars": len(text)}
 
 @app.post("/ingest_url")
@@ -127,6 +138,10 @@ def list_docs_endpoint():
     docs = list_docs()
     minimal = {k: {"title": v.get("title", ""), "chars": len(v.get("text", ""))} for k, v in docs.items()}
     return minimal
+
+@app.get("/healthz")
+def healthz():
+    return {"status": "ok"}
 
 # ------------------ MCP Server Tool Declaration ------------------
 
