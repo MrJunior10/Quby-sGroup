@@ -4,7 +4,6 @@ openai==1.37.0
 beautifulsoup4==4.12.3
 html5lib==1.1
 requests==2.32.3
-python-magic-bin
+python-magic
 pdfminer.six==20231228
 docx2txt==0.8
-magic
