@@ -1,88 +1,134 @@
+# 📄 Puch Doc Chat 🧠💬  
+**AI-powered document assistant — Upload. Chat. Summarize. Learn. Translate. Share.**
 
-# Puch Doc Chat — Migrated Template (No private MCP deps)
+[![Hackathon](https://img.shields.io/badge/PuchAI%20x%20OpenAI%20Hackathon-2025-blue)](https://puch.ai/hack)  
+[![Built with FastAPI](https://img.shields.io/badge/Built%20with-FastAPI-009688)](https://fastapi.tiangolo.com/)  
+[![Powered by OpenRouter](https://img.shields.io/badge/LLM-OpenRouter%20GPT--OSS--20B-purple)](https://openrouter.ai)  
+[![Hosted on Render](https://img.shields.io/badge/Hosted%20on-Render-green)](https://render.com)
 
-This repo gives you **two ways to run** right now without any private SDKs:
+## 🚀 Live Demo  
+📍 Hosted: [https://puch-doc-chat.onrender.com](https://puch-doc-chat.onrender.com)
 
-1) **`stdio_server.py`** — a tiny JSON-lines stdio protocol
-   - Accepts: one JSON object per line on stdin
-   - Returns: one JSON object per line on stdout
-   - Ideal until you plug into the official Puch MCP SDK.
+## 🧠 About the Project
 
-2) **`http_server.py`** — a FastAPI HTTP server
-   - Easy to test locally or deploy on Render.
-   - Endpoints mirror your tools.
+**Puch Doc Chat** is an AI-powered universal document assistant. Designed for students, researchers, and professionals, it lets users:
 
-## Install
+- 📝 **Upload documents (PDF/DOCX)**
+- 💬 **Chat with your documents**
+- 🧾 **Get smart summaries**
+- 🧠 **Generate flashcards**
+- 🌐 **Translate into any language**
+- 🔗 **Generate shareable summary links**
 
-```bash
-python -m venv .venv
-. .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-# Make sure the right readability package:
-pip uninstall -y readability
-pip install readability-lxml
-```
+Built using **FastAPI**, **OpenRouter (gpt-oss-20b)**, and integrated with **Puch AI’s MCP server** for seamless tool usage over WhatsApp and other clients.
 
-(Optional) LLM quality boost:
-```bash
-export OPENAI_API_KEY=sk-...   # Windows PowerShell: $Env:OPENAI_API_KEY="sk-..."
-```
+## 🛠 Features
 
-## Run — STDIO mode
+| Feature                  | Endpoint                 | Description |
+|--------------------------|--------------------------|-------------|
+| 📄 Ingest Text           | `/ingest_text`           | Upload plain text |
+| 📎 Upload File           | `/ingest_file`           | Upload PDF or DOCX |
+| 🌍 Ingest from URL       | `/ingest_url`            | Extract and ingest web article |
+| 🧠 Summarize             | `/summarize_doc`         | Generate smart summary |
+| 💬 Chat with Document    | `/chat_with_doc`         | Ask questions |
+| 🧠 Flashcard Generator   | `/generate_flashcards`   | Generate quiz-style flashcards |
+| 🌐 Translate Document    | `/translate_doc`         | Translate entire content |
+| 🔤 Translate Any Text    | `/translate_text`        | Translate any string |
+| 🔗 Shareable Summary     | `/share_summary_link`    | Create `.md` summary |
+| 📋 List Docs             | `/list_docs`             | Lists all uploaded documents |
 
-```bash
-python stdio_server.py
-```
-In another shell, you can send JSON lines:
-```bash
-# example on Unix; on Windows, use PowerShell equivalents
-printf '{"tool":"ingest_text","args":{"title":"Demo","text":"Hello world. This is a long text."}}\n' | python stdio_server.py
-```
+## 🧪 Example Payloads
 
-## Run — HTTP mode
-
-```bash
-uvicorn http_server:app --host 0.0.0.0 --port 8000
-```
-
-Test:
-```
-POST /ingest_text       {"title":"Demo","text":"..."}  -> {"doc_id": "..."}
-POST /summarize_doc     {"doc_id":"...","target_words":150}
-POST /chat_with_doc     {"doc_id":"...","question":"What is ...?"}
-POST /generate_flashcards{"doc_id":"...","num":8}
-POST /translate_text    {"text":"Hello","target_lang":"hi"}
-POST /share_summary_link{"doc_id":"..."}
-GET  /list_docs
-```
-
-## When you get the official Puch MCP SDK
-
-- Replace this stdio loop with their `server.run_stdio()` glue.
-- Your service code in `services/` already stays the same.
-- Map each endpoint/tool to an MCP tool definition.
-
-Good luck on the leaderboard!
-
-
-### File Uploads (PDF / DOCX / TXT)
-
-```bash
-uvicorn http_server:app --host 0.0.0.0 --port 8000
-```
-
-**POST /ingest_file** (multipart/form-data):
-- `file`: your document (pdf/docx/txt)
-- `title` (optional): override title
-
-Response:
+### ✅ Summarize Document
 ```json
-{ "doc_id": "...", "title": "Your Title", "chars": 12345 }
+POST /summarize_doc
+{
+  "doc_id": "your-doc-id",
+  "target_words": 200
+}
 ```
 
-Then call:
-- `POST /summarize_doc` → `{"doc_id":"...","target_words":150}`
-- `POST /chat_with_doc` → `{"doc_id":"...","question":"..."}`
-- `POST /generate_flashcards` → `{"doc_id":"...","num":10}`
-- `POST /share_summary_link` → `{"doc_id":"..."}`
+### ✅ Chat with Document
+```json
+POST /chat_with_doc
+{
+  "doc_id": "your-doc-id",
+  "question": "What are the key insights?"
+}
 ```
+
+### ✅ Translate Full Document
+```json
+POST /translate_doc
+{
+  "doc_id": "your-doc-id",
+  "target_lang": "hi"
+}
+```
+
+## 🔌 MCP Integration
+
+Supports Puch AI MCP server tool format.
+
+### MCP Endpoint:
+```http
+POST /mcp
+```
+
+### MCP Tool: `validate`
+```json
+{
+  "country_code": "+91",
+  "number": "9475046489"
+}
+```
+
+## 🧑‍💻 Tech Stack
+
+- **Backend:** FastAPI
+- **LLM Provider:** OpenRouter (gpt-oss-20b)
+- **Deployment:** Render
+- **Tunneling for MCP:** ngrok
+- **Integration:** Puch AI MCP protocol
+- **Language:** Python 3.10+
+
+## 📦 Installation (Local Setup)
+
+```bash
+git clone https://github.com/your-username/puch-doc-chat
+cd puch-doc-chat
+python -m venv .venv
+source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+pip install -r requirements.txt
+uvicorn http_server:app --reload
+```
+
+To expose via ngrok:
+```bash
+ngrok http 8000
+```
+
+## 📂 Directory Structure
+```
+puch-doc-chat/
+│
+├── http_server.py          # Main FastAPI app
+├── services/               # Modular logic (LLM, file parsing, etc.)
+│   ├── llm.py
+│   ├── storage.py
+│   ├── doc_parser.py
+│   └── file_ingest.py
+├── shares/                 # Shareable .md summaries (autogenerated)
+└── requirements.txt
+```
+
+## 🎯 Submission (Hackathon)
+
+```
+/hackathon submission add <your-server-id> https://github.com/your-username/puch-doc-chat
+```
+
+## 🏁 Credits
+
+Built with ❤️ by **Souvick Bouri**  
+Inspired by real user needs. Made to be *useful*.
