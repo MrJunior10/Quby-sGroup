@@ -122,3 +122,7 @@ def list_docs_endpoint():
     docs = list_docs()
     minimal = {k: {"title": v.get("title", ""), "chars": len(v.get("text", ""))} for k, v in docs.items()}
     return minimal
+
+@app.get("/mcp")
+def validate():
+    return {"validate": "919475046489"}  # Replace with your own phone number in +91 format
