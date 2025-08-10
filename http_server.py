@@ -1,6 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, Form
 from pydantic import BaseModel
-
 import os, string, random, json
 
 from services.storage import create_doc, get_doc, set_meta, list_docs
@@ -10,6 +9,7 @@ from services.llm import summarize as llm_summarize, qa as llm_qa, flashcards as
 
 app = FastAPI(title="Puch Doc Chat - HTTP API")
 
+# ------------------ Request Models ------------------
 class IngestText(BaseModel):
     title: str
     text: str
@@ -41,8 +41,15 @@ class ShareReq(BaseModel):
     doc_id: str
     target_words: int = 150
 
+class ValidateReq(BaseModel):
+    country_code: str
+    number: str
+
+# ------------------ Utility ------------------
 def token(n=10):
     return "".join(random.choice(string.ascii_lowercase + string.digits) for _ in range(n))
+
+# ------------------ API Endpoints ------------------
 
 @app.post("/ingest_text")
 def ingest_text(payload: IngestText):
@@ -68,8 +75,6 @@ def summarize_doc(payload: SummarizeReq):
     doc = get_doc(payload.doc_id)
     if not doc:
         return {"error": "doc not found"}
-
-    print(f"Summarizing doc {payload.doc_id} with target_words={payload.target_words}")
     s = llm_summarize(doc["text"], payload.target_words)
     set_meta(payload.doc_id, "last_summary", s)
     return {"summary": s}
@@ -123,6 +128,23 @@ def list_docs_endpoint():
     minimal = {k: {"title": v.get("title", ""), "chars": len(v.get("text", ""))} for k, v in docs.items()}
     return minimal
 
-@app.get("/mcp")
-def validate():
-    return {"validate": "919475046489"}  # Replace with your own phone number in +91 format
+# ------------------ MCP Server Tool Declaration ------------------
+
+@app.post("/mcp")
+def mcp_index():
+    return {
+        "tools": [
+            {
+                "name": "validate",
+                "description": "Returns your phone number in {country_code}{number} format",
+                "parameters": {
+                    "country_code": {"type": "string"},
+                    "number": {"type": "string"}
+                }
+            }
+        ]
+    }
+
+@app.post("/validate")
+def validate_tool(payload: ValidateReq):
+    return {"result": f"{payload.country_code}{payload.number}"}
